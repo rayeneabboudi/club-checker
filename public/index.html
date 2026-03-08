@@ -224,6 +224,54 @@
     transform: none !important;
     box-shadow: none !important;
 }
+    .support-footer {
+        margin-top: 50px;
+        padding: 15px;
+        background-color: #f8f9fa; /* Very light gray */
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        text-align: center;
+    }
+
+    .support-label {
+        font-size: 0.8rem;
+        color: #7f8c8d;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .status-icon {
+        background-color: var(--accent-color);
+        color: white;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: bold;
+    }
+
+    .support-contact {
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 0.9rem;
+    }
+
+    .dev-name {
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .dev-handle {
+        color: var(--accent-color);
+        margin-right: 10px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+    }
 </style>
 </head>
 <body>
@@ -420,7 +468,16 @@
         <button id="sendBtn" class="submit-button" disabled>إرسال التقييم</button>
     </div>
 </div>
-
+<div class="support-footer">
+    <div class="support-label">
+        <span class="status-icon">i</span>
+        تواصل مع الدعم الفني في حال واجهت مشكلة:
+    </div>
+    <div class="support-contact">
+        <span class="dev-name">Abboudi Rayene ||</span>
+        <span class="dev-handle">rayene.g.abboudi@gmail.com</span>
+    </div>
+</div>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
