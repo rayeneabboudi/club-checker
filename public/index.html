@@ -501,186 +501,150 @@
             <span class="dev-handle">rayene.g.abboudi@gmail.com</span>
         </div>
     </div>
-</div> <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
+</div>
+    <script type="module">
+    // Using the modern Modular SDK for stability
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    var db; 
     const firebaseConfig = {     
         apiKey: "AIzaSyDwGR827G2V0ZOzB6szqjdWesU4VBTUW2w",
         authDomain: "club-member-evaluations.firebaseapp.com",
         projectId: "club-member-evaluations",
         storageBucket: "club-member-evaluations.firebasestorage.app",
         messagingSenderId: "443848737013",
-        appId: "1:443848737013:web:bc8b8a89f84dfa9a1c05bc",
-        measurementId: "G-6VEWMGDRVP" 
+        appId: "1:443848737013:web:bc8b8a89f84dfa9a1c05bc"
     };
 
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    db = firebase.firestore();
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
 
-    document.addEventListener('DOMContentLoaded', function() {
-        
-        // --- GATEKEEPER ELEMENTS & LOGIC ---
-        const loginBtn = document.getElementById('loginBtn');
-        const passwordInput = document.getElementById('admin-password');
-        const loginContainer = document.getElementById('login-container');
-        const mainContent = document.getElementById('main-content');
-        
-        // غير كلمة المرور هنا متى شئت
-        const CORRECT_PASSWORD = "Univationheads@2026"; 
+    // --- SECURITY GATEKEEPER ---
+    const CORRECT_PASSWORD = "Univationheads@2026";
+    const loginContainer = document.getElementById('login-container');
+    const mainContent = document.getElementById('main-content');
+    const passwordInput = document.getElementById('admin-password');
+    const loginBtn = document.getElementById('loginBtn');
 
-        function handleLogin() {
-            if (passwordInput.value === CORRECT_PASSWORD) {
-                sessionStorage.setItem('isAuthorized', 'true');
-                showSystem();
-            } else {
-                alert("❌ كلمة المرور غير صحيحة");
-            }
-        }
+    // Force password on every refresh (No sessionStorage)
+    window.onload = () => {
+        loginContainer.style.display = 'block';
+        mainContent.style.display = 'none';
+        passwordInput.value = ""; // Clear password field
+    };
 
-        function showSystem() {
+    function handleLogin() {
+        if (passwordInput.value === CORRECT_PASSWORD) {
             loginContainer.style.display = 'none';
             mainContent.style.display = 'block';
-            updateEverything(); // Initialize variables for the form
+            updateEverything(); 
+        } else {
+            alert("❌ كلمة المرور غير صحيحة");
+            passwordInput.value = "";
         }
+    }
 
-        // Check if already logged in during this session
-        if (sessionStorage.getItem('isAuthorized') === 'true') {
-            showSystem();
-        }
+    loginBtn.addEventListener('click', handleLogin);
+    passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
 
-        // Login Triggers
-        loginBtn.addEventListener('click', handleLogin);
-        passwordInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') handleLogin();
-        });
-
-
-        // --- FORM ELEMENTS & LOGIC ---
-        const sendBtn = document.getElementById('sendBtn');
-        const allInputs = document.querySelectorAll('input:not([readonly]), textarea');
+    // --- AUTO-RATING LOGIC ---
+    function autoSelectRating(score) {
         const radioButtons = document.getElementsByName('overall_rating');
+        let targetValue = "";
+        if (score >= 72) targetValue = "excellent";
+        else if (score >= 60) targetValue = "very_good";
+        else if (score >= 48) targetValue = "good";
+        else targetValue = "needs_improvement";
 
-        function updateEverything() {
-            let totalScore = 0;
-            document.querySelectorAll('.criteria-score').forEach(input => {
-                let val = parseFloat(input.value) || 0;
-                let max = parseFloat(input.getAttribute('max')) || 0;
-                
-                if (val > max) { 
-                    val = max; 
-                    input.value = max; 
-                }
-                totalScore += val;
-            });
-            document.getElementById('totalScore').value = totalScore;
+        radioButtons.forEach(rb => {
+            rb.checked = (rb.value === targetValue);
+            // Optional: High-contrast bento styling for the selected rating
+            rb.parentElement.style.backgroundColor = rb.checked ? "#e8f4f8" : "var(--bg-color)";
+            rb.parentElement.style.borderColor = rb.checked ? "var(--accent-color)" : "var(--border-color)";
+        });
+    }
 
-            let totalDeductions = 0;
-            const deductionRows = document.querySelectorAll('.deduction-count');
-            const deductionTotals = document.querySelectorAll('.deduction-total');
-
-            deductionRows.forEach((input, index) => {
-                let count = parseFloat(input.value) || 0;
-                let penalty = parseFloat(input.getAttribute('data-penalty')) || 0;
-                let rowResult = count * penalty;
-                
-                deductionTotals[index].value = rowResult;
-                totalDeductions += rowResult;
-            });
-            document.getElementById('totalDeductions').value = totalDeductions;
-
-            let netScore = totalScore - totalDeductions;
-            document.getElementById('netScore').value = netScore < 0 ? 0 : netScore;
-
-            checkValidation();
-        }
-
-        function checkValidation() {
-            let isComplete = true;
-
-            // Skip the admin password field in validation
-            allInputs.forEach(input => {
-                if (input.id !== 'admin-password' && input.value.trim() === "") {
-                    isComplete = false;
-                }
-            });
-
-            let radioChecked = false;
-            radioButtons.forEach(rb => {
-                if (rb.checked) radioChecked = true;
-            });
-
-            sendBtn.disabled = !(isComplete && radioChecked);
-        }
-
-        allInputs.forEach(input => {
-            input.addEventListener('input', updateEverything);
-            input.addEventListener('change', updateEverything);
+    // --- CALCULATION LOGIC ---
+    function updateEverything() {
+        let totalScore = 0;
+        document.querySelectorAll('.criteria-score').forEach(input => {
+            let val = Math.min(parseFloat(input.value) || 0, parseFloat(input.max));
+            input.value = input.value > input.max ? input.max : input.value;
+            totalScore += val;
         });
 
-        radioButtons.forEach(radio => {
-            radio.addEventListener('change', updateEverything);
+        let totalDeductions = 0;
+        document.querySelectorAll('.deduction-count').forEach((input, index) => {
+            let rowTotal = (parseFloat(input.value) || 0) * parseFloat(input.dataset.penalty);
+            document.querySelectorAll('.deduction-total')[index].value = rowTotal;
+            totalDeductions += rowTotal;
         });
 
-        sendBtn.addEventListener('click', async function() {
-            sendBtn.disabled = true;
-            sendBtn.innerText = "جاري الحفظ في السحابة...";
+        const net = Math.max(0, totalScore - totalDeductions);
+        document.getElementById('netScore').value = net;
+        document.getElementById('totalScore').value = totalScore;
+        document.getElementById('totalDeductions').value = totalDeductions;
 
-            const headerInputs = document.querySelectorAll('.header-info input');
-            const scores = document.querySelectorAll('.criteria-score');
-            const deductions = document.querySelectorAll('.deduction-count');
-            const textareas = document.querySelectorAll('textarea');
-            const rating = document.querySelector('input[name="overall_rating"]:checked');
+        autoSelectRating(net); // Auto-update the radio buttons
+        checkValidation();
+    }
 
-            const evaluationData = {
-                meta: {
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    submission_date: new Date().toLocaleDateString('ar-EG')
-                },
-                member_info: {
-                    name: headerInputs[0].value,
-                    department: headerInputs[1].value,
-                    period_start: headerInputs[2].value,
-                    period_end: headerInputs[3].value,
-                    evaluator_name: headerInputs[4].value
-                },
-                performance_metrics: {
-                    attendance: parseFloat(scores[0].value) || 0,
-                    task_execution: parseFloat(scores[1].value) || 0,
-                    initiative: parseFloat(scores[2].value) || 0,
-                    team_interaction: parseFloat(scores[3].value) || 0,
-                    net_final_score: parseFloat(document.getElementById('netScore').value) || 0
-                },
-                deductions: {
-                    total_points_lost: parseFloat(document.getElementById('totalDeductions').value) || 0
-                },
-                feedback: {
-                    strengths: textareas[0].value,
-                    improvements: textareas[1].value,
-                    rating_label: rating ? rating.value : "N/A"
-                }
-            };
+    // --- SUBMISSION ---
+    document.getElementById('sendBtn').addEventListener('click', async function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.innerText = "جاري الحفظ بروتوكولياً...";
 
-            try {
-                await db.collection("member_evaluations").add(evaluationData);
-                alert("✅ تم الحفظ بنجاح! ");
-                location.reload(); 
-            } catch (error) {
-                console.error("Firestore Error:", error);
-                alert("❌ فشل الاتصال: تأكد من أن قواعد الحماية (Rules) في وضع Test Mode");
-                sendBtn.disabled = false;
-                sendBtn.innerText = "إرسال التقييم";
+        const header = document.querySelectorAll('.header-info input');
+        const scores = document.querySelectorAll('.criteria-score');
+        const textareas = document.querySelectorAll('textarea');
+        const rating = document.querySelector('input[name="overall_rating"]:checked');
+
+        const evaluationData = {
+            meta: { timestamp: serverTimestamp(), submission_date: new Date().toLocaleDateString('en-GB') },
+            member_info: {
+                name: header[0].value,
+                department: header[1].value,
+                period_start: header[2].value,
+                period_end: header[3].value,
+                evaluator_name: header[4].value
+            },
+            performance_metrics: {
+                attendance: parseFloat(scores[0].value) || 0,
+                task_execution: parseFloat(scores[1].value) || 0,
+                initiative: parseFloat(scores[2].value) || 0,
+                team_interaction: parseFloat(scores[3].value) || 0,
+                net_final_score: parseFloat(document.getElementById('netScore').value) || 0
+            },
+            feedback: {
+                strengths: textareas[0].value,
+                improvements: textareas[1].value,
+                rating_label: rating ? rating.value : "N/A"
             }
-        });
+        };
 
-        // Run once on load to establish defaults
-        updateEverything();
+        try {
+            await addDoc(collection(db, "member_evaluations"), evaluationData);
+            alert("✅ تم إرسال البروتوكول بنجاح");
+            location.reload(); 
+        } catch (e) {
+            console.error(e);
+            alert("❌ خطأ في النظام");
+            btn.disabled = false;
+        }
     });
+
+    // Event Listeners for inputs
+    document.querySelectorAll('input, textarea').forEach(el => {
+        el.addEventListener('input', updateEverything);
+    });
+
+    function checkValidation() {
+        const requiredFields = Array.from(document.querySelectorAll('.header-info input, .criteria-score, textarea'));
+        const allFilled = requiredFields.every(f => f.value.trim() !== "");
+        document.getElementById('sendBtn').disabled = !allFilled;
+    }
 </script>
 
 </body>
