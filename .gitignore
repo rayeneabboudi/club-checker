@@ -1,0 +1,13 @@
+# Firebase Secret Key (CRITICAL: Do not delete this line)
+admin/serviceAccountKey.json
+
+# Local Excel Reports
+Department_Reports/
+
+# Python environment and cache
+__pycache__/
+*.pyc
+.venv/
+
+# Editor Settings
+.vscode/

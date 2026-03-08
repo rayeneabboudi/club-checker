@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <title>نموذج تقييم أداء العضو</title>
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --accent-color: #2980b9;
+        --bg-color: #f8f9fa;
+        --border-color: #dee2e6;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #e9ecef;
+        color: var(--primary-color);
+        margin: 0;
+        padding: 10px; /* Reduced for mobile */
+        line-height: 1.6;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: #ffffff;
+        padding: 20px; /* Adjusted for mobile */
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+        font-size: 1.5rem; /* Responsive sizing */
+        text-align: center;
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--accent-color);
+        padding-bottom: 10px;
+        margin-bottom: 25px;
+    }
+
+    h2 {
+        font-size: 1.1rem;
+        margin-top: 30px;
+        text-align: right;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 5px;
+    }
+
+    /* Responsive Grid for Header */
+    .header-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .header-info div {
+        display: flex;
+        flex-direction: column; /* Stacked labels for better mobile touch */
+        gap: 5px;
+    }
+
+    .header-info label {
+        font-weight: bold;
+    }
+
+    input[type="text"], 
+    input[type="number"], 
+    input[type="date"], 
+    textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-family: inherit;
+        box-sizing: border-box;
+    }
+
+    .date-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .date-group input {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    /* Table Responsiveness Logic */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 25px;
+    }
+
+    th, td {
+        border: 1px solid var(--border-color);
+        padding: 12px;
+        text-align: right;
+    }
+
+    th {
+        background-color: var(--bg-color);
+        color: var(--secondary-color);
+    }
+
+    /* Media Query for Mobile Devices */
+    @media (max-width: 768px) {
+        /* Hide table headers */
+        thead {
+            display: none;
+        }
+
+        /* Make each row look like a card */
+        tr {
+            display: block;
+            border: 2px solid var(--border-color);
+            margin-bottom: 15px;
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        td {
+            display: block;
+            text-align: right;
+            border: none;
+            border-bottom: 1px solid #eee;
+            position: relative;
+            padding-top: 35px; /* Space for the label */
+        }
+
+        /* Inject labels using the 'data-label' attribute */
+        td::before {
+            content: attr(data-label);
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            color: var(--accent-color);
+        }
+
+        .score-input {
+            width: 100% !important;
+            text-align: right;
+        }
+
+        .final-score-section {
+            flex-direction: column;
+            text-align: center;
+            gap: 10px;
+        }
+
+        .rating-group {
+            justify-content: center;
+        }
+
+        .signatures {
+            flex-direction: column;
+            gap: 20px;
+        }
+    }
+
+    .final-score-section {
+        background-color: #e8f4f8;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid #b8daff;
+    }
+
+    .rating-group {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .rating-group label {
+        flex: 1;
+        min-width: 140px;
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background: var(--bg-color);
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+    }
+    .submit-button {
+        background-color: var(--accent-color);
+        color: white;
+        padding: 15px 40px;
+        border: none;
+        border-radius: 6px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, background-color 0.2s;
+        width: 100%; /* Full width on mobile */
+        max-width: 300px;
+    }
+
+    .submit-button:hover {
+        background-color: #1e608d;
+        transform: translateY(-2px);
+    }
+
+    .submit-button:active {
+        transform: translateY(0);
+    }
+    /* Disabled Button Style */
+.submit-button:disabled {
+    background-color: #bdc3c7 !important;
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>استمارة تقييم أداء العضو</h1>
+
+    <div class="header-info">
+        <div>
+            <label>اسم العضو:</label>
+            <input type="text" placeholder="أدخل اسم العضو">
+        </div>
+        <div>
+            <label>القسم:</label>
+            <input type="text" placeholder="أدخل اسم القسم">
+        </div>
+        <div class="date-group">
+            <label>فترة التقييم: من</label>
+            <input type="date">
+            <label>إلى</label>
+            <input type="date">
+        </div>
+        <div>
+            <label>اسم المقيم (رئيس القسم):</label>
+            <input type="text" placeholder="أدخل اسم المقيم">
+        </div>
+    </div>
+
+    <h2>التقييم الرئيسي</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>المعيار الرئيسي</th>
+                <th style="width: 80px;">الوزن</th>
+                <th>المؤشرات الإيجابية (للحصول على الدرجة)</th>
+                <th>المؤشرات السلبية (تخصم من الدرجة)</th>
+                <th style="width: 100px;">الدرجة الممنوحة</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>أولاً: الحضور والالتزام</strong></td>
+                <td>20%</td>
+                <td>
+                    <ul>
+                        <li>حضور جميع الاجتماعات والنشاطات في وقتها.</li>
+                        <li>إعلام المسؤول مسبقاً في حال وجود عذر طارئ.</li>
+                        <li>الالتزام بوقت البدء والانتهاء.</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>الغياب المتكرر عن النشاطات دون عذر.</li>
+                        <li>التأخر المستمر عن المواعيد.</li>
+                        <li>المغادرة المبكرة دون إذن.</li>
+                    </ul>
+                </td>
+                <td><input type="number" class="score-input criteria-score" min="0" max="16" placeholder="/ 16"></td>
+            </tr>
+            <tr>
+                <td><strong>ثانياً: تنفيذ المهام المكلف بها</strong></td>
+                <td>40%</td>
+                <td>
+                    <ul>
+                        <li>إنجاز المهام في الوقت المحدد (Deadline).</li>
+                        <li>جودة العمل وخلوه من الأخطاء.</li>
+                        <li>متابعة المهمة حتى انتهائها.</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>التأخر في تسليم المهام.</li>
+                        <li>تنفيذ المهام بشكل ناقص أو غير دقيق.</li>
+                        <li>عدم القيام بالمهام المكلف بها تماماً.</li>
+                    </ul>
+                </td>
+                <td><input type="number" class="score-input criteria-score" min="0" max="32" placeholder="/ 32"></td>
+            </tr>
+            <tr>
+                <td><strong>ثالثاً: المبادرة والروح الإيجابية</strong></td>
+                <td>20%</td>
+                <td>
+                    <ul>
+                        <li>طرح أفكار جديدة لتطوير القسم.</li>
+                        <li>التطوع لأخذ مهام إضافية دون انتظار التكليف.</li>
+                        <li>الحماس ونقل الطاقة الإيجابية للفريق.</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>الانتظار الدائم للتكليف (لا يعمل إلا إذا أُمِر).</li>
+                        <li>السلبية أو التذمر من المهام.</li>
+                        <li>عدم الاهتمام بتطوير العمل.</li>
+                    </ul>
+                </td>
+                <td><input type="number" class="score-input criteria-score" min="0" max="16" placeholder="/ 16"></td>
+            </tr>
+            <tr>
+                <td><strong>رابعاً: المساهمة والتفاعل داخل القسم</strong></td>
+                <td>20%</td>
+                <td>
+                    <ul>
+                        <li>التعاون مع الزملاء ومساعدتهم عند الحاجة.</li>
+                        <li>التفاعل في النقاشات والاجتماعات بفعالية.</li>
+                        <li>احترام آراء الآخرين وخلق جو ودي.</li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>قلة التفاعل أو العزلة عن فريق العمل.</li>
+                        <li>خلق جو من التوتر أو الخلافات.</li>
+                        <li>عدم المشاركة في نقاشات القسم.</li>
+                    </ul>
+                </td>
+                <td><input type="number" class="score-input criteria-score" min="0" max="16" placeholder="/ 16"></td>
+            </tr>
+            <tr class="total-row">
+                <td colspan="4" style="text-align: left;">المجموع الكلي:</td>
+                <td><input type="number" id="totalScore" class="score-input" placeholder="/ 80" readonly style="background-color: #e9ecef;"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>المخالفات والخصومات</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>نوع المخالفة</th>
+                <th style="width: 120px;">عدد المرات</th>
+                <th style="width: 150px;">قيمة الخصم (لكل مرة)</th>
+                <th style="width: 120px;">إجمالي الخصم</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>غياب عن نشاط هام دون عذر</td>
+                <td><input type="number" class="score-input deduction-count" data-penalty="5" min="0" value="0"></td>
+                <td>-5 درجات</td>
+                <td><input type="number" class="score-input deduction-total" value="0" readonly style="background-color: #e9ecef;"></td>
+            </tr>
+            <tr>
+                <td>عدم الرد على التواصل الرسمي (هاتف/مجموعة)</td>
+                <td><input type="number" class="score-input deduction-count" data-penalty="2" min="0" value="0"></td>
+                <td>-2 درجة</td>
+                <td><input type="number" class="score-input deduction-total" value="0" readonly style="background-color: #e9ecef;"></td>
+            </tr>
+            <tr>
+                <td>تكرار الأخطاء في نفس المهمة بعد التنبيه</td>
+                <td><input type="number" class="score-input deduction-count" data-penalty="5" min="0" value="0"></td>
+                <td>-5 درجات</td>
+                <td><input type="number" class="score-input deduction-total" value="0" readonly style="background-color: #e9ecef;"></td>
+            </tr>
+            <tr class="total-row">
+                <td colspan="3" style="text-align: left;">إجمالي الخصومات:</td>
+                <td><input type="number" id="totalDeductions" class="score-input" value="0" readonly style="background-color: #e9ecef; color: red;"></td>
+            </tr>
+        </tbody>
+    </table>
+
+<div class="final-score-section">
+    <label>صافي الدرجة النهائية (المجموع الكلي - إجمالي الخصومات):</label>
+    <input type="number" id="netScore" placeholder="الدرجة من 80" readonly>
+</div>
+
+    <h2>ملاحظات التقييم</h2>
+    <div class="feedback-section">
+        <label>نقاط القوة لدى العضو:</label>
+        <textarea rows="3" placeholder="اكتب نقاط القوة هنا..."></textarea>
+    </div>
+    <div class="feedback-section">
+        <label>نقاط تحتاج إلى تحسين:</label>
+        <textarea rows="3" placeholder="اكتب النقاط التي تحتاج إلى تحسين هنا..."></textarea>
+    </div>
+
+    <h2>التقييم العام</h2>
+<div class="rating-group">
+    <label><input type="radio" name="overall_rating" value="excellent"> ممتاز (72-80)</label>
+    <label><input type="radio" name="overall_rating" value="very_good"> جيد جداً (60-71)</label>
+    <label><input type="radio" name="overall_rating" value="good"> جيد (48-59)</label>
+    <label><input type="radio" name="overall_rating" value="needs_improvement"> يحتاج تحسين (أقل من 48)</label>
+</div>
+
+    <div class="signatures">
+        <div>
+            <label>توقيع رئيس القسم:</label>
+            <input type="text" placeholder="الاسم أو التوقيع الرقمي">
+        </div>
+        <div>
+            <label>توقيع العضو (للاطلاع):</label>
+            <input type="text" placeholder="الاسم أو التوقيع الرقمي">
+        </div>
+    </div>
+    <div style="text-align: center; margin-top: 40px;">
+        <button id="sendBtn" class="submit-button" disabled>إرسال التقييم</button>
+    </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
+
+var db; 
+const firebaseConfig = {     apiKey: "AIzaSyDwGR827G2V0ZOzB6szqjdWesU4VBTUW2w",
+    authDomain: "club-member-evaluations.firebaseapp.com",
+    projectId: "club-member-evaluations",
+    storageBucket: "club-member-evaluations.firebasestorage.app",
+    messagingSenderId: "443848737013",
+    appId: "1:443848737013:web:bc8b8a89f84dfa9a1c05bc",
+    measurementId: "G-6VEWMGDRVP" };
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+db = firebase.firestore();
+  const app = initializeApp(firebaseConfig);
+   const analytics = getAnalytics(app);
+document.addEventListener('DOMContentLoaded', function() {
+    const sendBtn = document.getElementById('sendBtn');
+    
+    // Select all inputs that aren't readonly (these are the ones the user must fill)
+    const allInputs = document.querySelectorAll('input:not([readonly]), textarea');
+    const radioButtons = document.getElementsByName('overall_rating');
+
+    function updateEverything() {
+        // --- 1. CALCULATE MAIN SCORES (Criteria) ---
+        let totalScore = 0;
+        document.querySelectorAll('.criteria-score').forEach(input => {
+            let val = parseFloat(input.value) || 0;
+            let max = parseFloat(input.getAttribute('max')) || 0;
+            
+            // Safety Clamp: Don't let them type 20 if the max is 16
+            if (val > max) { 
+                val = max; 
+                input.value = max; 
+            }
+            totalScore += val;
+        });
+        document.getElementById('totalScore').value = totalScore;
+
+        // --- 2. CALCULATE DEDUCTIONS (Violations) ---
+        let totalDeductions = 0;
+        const deductionRows = document.querySelectorAll('.deduction-count');
+        const deductionTotals = document.querySelectorAll('.deduction-total');
+
+        deductionRows.forEach((input, index) => {
+            let count = parseFloat(input.value) || 0;
+            let penalty = parseFloat(input.getAttribute('data-penalty')) || 0;
+            let rowResult = count * penalty;
+            
+            // Update the specific "Total" box for this row
+            deductionTotals[index].value = rowResult;
+            totalDeductions += rowResult;
+        });
+        document.getElementById('totalDeductions').value = totalDeductions;
+
+        // --- 3. CALCULATE FINAL NET SCORE ---
+        let netScore = totalScore - totalDeductions;
+        document.getElementById('netScore').value = netScore < 0 ? 0 : netScore;
+
+        // --- 4. RUN VALIDATION GATEKEEPER ---
+        checkValidation();
+    }
+
+    function checkValidation() {
+        let isComplete = true;
+
+        // Check if any required input or textarea is empty
+        allInputs.forEach(input => {
+            if (input.value.trim() === "") {
+                isComplete = false;
+            }
+        });
+
+        // Check if one of the radio buttons (Rating) is selected
+        let radioChecked = false;
+        radioButtons.forEach(rb => {
+            if (rb.checked) radioChecked = true;
+        });
+
+        // Toggle the button state
+        sendBtn.disabled = !(isComplete && radioChecked);
+    }
+
+    // Attach listeners to all fields so it updates in real-time
+    allInputs.forEach(input => {
+        input.addEventListener('input', updateEverything);
+        input.addEventListener('change', updateEverything);
+    });
+
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', updateEverything);
+    });
+
+    // Handle the button click (Local only for now)
+// --- The Cloud Handshake ---
+    sendBtn.addEventListener('click', async function() {
+        // 1. Visual Feedback: Lock the button so they don't click twice
+        sendBtn.disabled = true;
+        sendBtn.innerText = "جاري الحفظ في السحابة...";
+
+        // 2. Map the data into a clean structure
+        const headerInputs = document.querySelectorAll('.header-info input');
+        const scores = document.querySelectorAll('.criteria-score');
+        const deductions = document.querySelectorAll('.deduction-count');
+        const textareas = document.querySelectorAll('textarea');
+        const rating = document.querySelector('input[name="overall_rating"]:checked');
+
+        const evaluationData = {
+            meta: {
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                submission_date: new Date().toLocaleDateString('ar-EG')
+            },
+            member_info: {
+                name: headerInputs[0].value,
+                department: headerInputs[1].value,
+                period_start: headerInputs[2].value,
+                period_end: headerInputs[3].value,
+                evaluator_name: headerInputs[4].value
+            },
+            performance_metrics: {
+                attendance: parseFloat(scores[0].value) || 0,
+                task_execution: parseFloat(scores[1].value) || 0,
+                initiative: parseFloat(scores[2].value) || 0,
+                team_interaction: parseFloat(scores[3].value) || 0,
+                net_final_score: parseFloat(document.getElementById('netScore').value) || 0
+            },
+            deductions: {
+                total_points_lost: parseFloat(document.getElementById('totalDeductions').value) || 0
+            },
+            feedback: {
+                strengths: textareas[0].value,
+                improvements: textareas[1].value,
+                rating_label: rating ? rating.value : "N/A"
+            }
+        };
+
+        // 3. The Actual Save
+        try {
+            // This creates a collection called 'member_evaluations' automatically
+            await db.collection("member_evaluations").add(evaluationData);
+            
+            alert("✅ تم الحفظ بنجاح! يمكنك الآن رؤية البيانات في Firebase Console");
+            
+            // Optional: Refresh the page to clear the form for the next evaluation
+            location.reload(); 
+        } catch (error) {
+            console.error("Firestore Error:", error);
+            alert("❌ فشل الاتصال: تأكد من أن قواعد الحماية (Rules) في وضع Test Mode");
+            sendBtn.disabled = false;
+            sendBtn.innerText = "إرسال التقييم";
+        }
+    });
+
+    // Run once on page load to ensure the button starts disabled
+    updateEverything();
+});
+</script>
+
+</body>
+</html>
